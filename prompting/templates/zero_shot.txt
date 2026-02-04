@@ -1,0 +1,19 @@
+You are given the following {language} function or program to test.
+
+==================== CODE UNDER TEST ====================
+{source_code}
+=========================================================
+
+Task:
+{prompt_text}
+
+Requirements:
+- Write unit tests using pytest.
+- Tests must be executable and syntactically correct.
+- Focus on functional correctness and edge cases.
+- Do not modify the original source code.
+- Do not include explanations, comments, or markdown.
+- Output only valid test code.
+
+Additional Information (if any):
+{metadata_json}
