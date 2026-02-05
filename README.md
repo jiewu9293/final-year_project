@@ -13,9 +13,10 @@ pip install -r requirements.txt
 This project uses [UnLeakedTestBench](https://github.com/huangd1999/UnLeakedTestBench)
  / ULT as an external benchmark.
 
-Download from the project root:
+From the project root:
 ```bash
 mkdir -p benchmarks
+cd benchmarks
 git clone https://github.com/huangd1999/UnLeakedTestBench benchmarks/UnLeakedTestBench
 ```
 **Note: benchmarks/UnLeakedTestBench/ is intentionally ignored by git to keep the repository lightweight and avoid nesting git repositories.**
