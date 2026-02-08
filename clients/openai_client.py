@@ -4,6 +4,7 @@ import os
 import time
 from openai import OpenAI
 from openai import NotFoundError
+from ecologits import EcoLogits
 
 from clients.base import BaseLLMClient, LLMResponse
 
@@ -35,13 +36,8 @@ class OpenAIClient(BaseLLMClient):
                 "OPENAI_API_KEY not found in environment variables"
             )
 
+        EcoLogits.init(providers="openai")
         self.client = OpenAI(api_key=api_key)
-
-        self.last_latency: float | None = None
-        self.last_input_tokens: int | None = None
-        self.last_output_tokens: int | None = None
-        self.last_total_tokens: int | None = None
-        self.last_model: str | None = None
 
     def generate(self, messages, **kwargs) -> str:
         """
@@ -52,11 +48,7 @@ class OpenAIClient(BaseLLMClient):
         temperature = kwargs.get("temperature", self.temperature)
         max_tokens = kwargs.get("max_tokens", self.max_tokens)
 
-        self.last_latency = None
-        self.last_input_tokens = None
-        self.last_output_tokens = None
-        self.last_total_tokens = None
-        self.last_model = None
+        self._reset_last()
 
         try:
             start = time.perf_counter()
@@ -68,14 +60,7 @@ class OpenAIClient(BaseLLMClient):
             )
             end = time.perf_counter()
         except NotFoundError as e:
-            raise NotFoundError(
-                message=(
-                    f"Model '{model}' was not found or you do not have access to it. "
-                    "Set OPENAI_MODEL to a model available to your account, or update the 'model' argument."
-                ),
-                response=e.response,
-                body=e.body,
-            ) from e
+            raise NotFoundError()
 
         self.last_latency = end - start
         self.last_model = getattr(response, "model", None) or model
@@ -85,6 +70,8 @@ class OpenAIClient(BaseLLMClient):
             self.last_input_tokens = getattr(usage, "prompt_tokens", None)
             self.last_output_tokens = getattr(usage, "completion_tokens", None)
             self.last_total_tokens = getattr(usage, "total_tokens", None)
+
+        self._extract_impacts(response)
 
         return response.choices[0].message.content
 

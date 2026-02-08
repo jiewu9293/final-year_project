@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Protocol, Sequence
 from abc import ABC, abstractmethod
-import json
+
 
 @dataclass(frozen=True)
 class Task:
@@ -142,81 +142,6 @@ class PromptFramework(ABC):
         )
         return bundle
 
-    def run(
-        self,
-        client: LLMClient,
-        task: Task,
-        *,
-        model: Optional[str] = None,
-        temperature: Optional[float] = None,
-        max_tokens: Optional[int] = None,
-        **kwargs: Any,
-    ) -> Dict[str, Any]:
-        """
-        Optional convenience runner:
-        - builds the prompt
-        - calls the client
-        - returns output with trace for logging/measurement
-
-        You can ignore this and orchestrate elsewhere if you prefer.
-        """
-        bundle = self.build(task, **kwargs)
-
-        gen_kwargs = {
-            "model": model,
-            "temperature": temperature if temperature is not None else self.default_temperature,
-            "max_tokens": max_tokens if max_tokens is not None else self.default_max_tokens,
-        }
-        # remove None (some SDKs dislike None)
-        gen_kwargs = {k: v for k, v in gen_kwargs.items() if v is not None}
-
-        output = client.generate(bundle.to_openai_like(), **gen_kwargs)
-
-        return {
-            "framework": self.name,
-            "task_id": task.task_id,
-            "messages": bundle.to_openai_like(),
-            "output": output,
-            "trace": bundle.trace,
-            "gen_kwargs": gen_kwargs,
-        }
-    def step(
-        self,
-        client: LLMClient,
-        *,
-        bundle: PromptBundle,
-        user_instruction: str,
-        model: Optional[str] = None,
-        temperature: Optional[float] = None,
-        max_tokens: Optional[int] = None,
-        **kwargs: Any,
-    ) -> str:
-        """
-        Add a new user instruction to an existing bundle and generate one step.
-        Useful for ToT/GToT style multi-round prompting.
-        """
-        bundle.messages.append(Message(role="user", content=user_instruction))
-
-        gen_kwargs = {
-            "model": model,
-            "temperature": temperature if temperature is not None else self.default_temperature,
-            "max_tokens": max_tokens if max_tokens is not None else self.default_max_tokens,
-        }
-        gen_kwargs = {k: v for k, v in gen_kwargs.items() if v is not None}
-
-        output = client.generate(bundle.to_openai_like(), **gen_kwargs)
-
-        bundle.messages.append(Message(role="assistant", content=output))
-        bundle.trace.append(
-            {
-                "type": "step",
-                "user_instruction": user_instruction,
-                "gen_kwargs": gen_kwargs,
-                "output_preview": output[:300],
-            }
-        )
-        return output
-
     @abstractmethod
     def _build_messages(self, task: Task, **kwargs: Any) -> List[Message]:
         """Framework-specific message construction."""
@@ -232,7 +157,6 @@ class PromptFramework(ABC):
             "language": task.language,
             "source_code": task.source_code,
             "prompt_text": task.prompt_text,
-            "metadata_json": json.dumps(task.metadata, ensure_ascii=False, indent=2),
             **kwargs,
         }
 

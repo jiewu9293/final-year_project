@@ -12,6 +12,7 @@ from tqdm import tqdm
 
 from benchmarks_adapter import load_json_array_or_jsonl, item_to_task
 from prompting.zero_shot import ZeroShotPrompting
+from prompting.few_shot import FewShotPrompting
 from clients.openai_client import OpenAIClient
 from utils.io import append_jsonl
 
@@ -35,7 +36,7 @@ def parse_args():
         "--framework",
         type=str,
         default="zero_shot",
-        choices=["zero_shot"],
+        choices=["zero_shot", "few_shot"],
         help="Prompt framework to use"
     )
     parser.add_argument(
@@ -124,7 +125,11 @@ def main():
     )
     print(f"Loaded {len(dataset)} tasks")
     
-    framework = ZeroShotPrompting()
+    FRAMEWORKS = {
+        'zero_shot': ZeroShotPrompting,
+        'few_shot': FewShotPrompting,
+    }
+    framework = FRAMEWORKS[args.framework]()
     print(f"Using framework: {args.framework}")
     
     client = OpenAIClient(
@@ -176,6 +181,14 @@ def main():
                 'latency': latency,
                 'input_tokens': client.last_input_tokens,
                 'output_tokens': client.last_output_tokens,
+                'energy_kwh_min': client.last_energy_kwh[0] if client.last_energy_kwh else None,
+                'energy_kwh_max': client.last_energy_kwh[1] if client.last_energy_kwh else None,
+                'gwp_kgco2eq_min': client.last_gwp_kgco2eq[0] if client.last_gwp_kgco2eq else None,
+                'gwp_kgco2eq_max': client.last_gwp_kgco2eq[1] if client.last_gwp_kgco2eq else None,
+                'adpe_kgsbeq_min': client.last_adpe_kgsbeq[0] if client.last_adpe_kgsbeq else None,
+                'adpe_kgsbeq_max': client.last_adpe_kgsbeq[1] if client.last_adpe_kgsbeq else None,
+                'pe_mj_min': client.last_pe_mj[0] if client.last_pe_mj else None,
+                'pe_mj_max': client.last_pe_mj[1] if client.last_pe_mj else None,
                 'output_file': str(output_file),
                 'status': 'success',
                 'error': None

@@ -1,0 +1,72 @@
+You are given the following {language} function or program to test.
+
+Here are some examples of how to write good tests:
+
+==================== EXAMPLE 1 ====================
+Code:
+def factorial(n):
+    if n < 0:
+        raise ValueError("n must be non-negative")
+    if n == 0:
+        return 1
+    return n * factorial(n - 1)
+
+Tests:
+def test_factorial_zero():
+    assert factorial(0) == 1
+
+def test_factorial_positive():
+    assert factorial(5) == 120
+
+def test_factorial_one():
+    assert factorial(1) == 1
+
+def test_factorial_negative():
+    with pytest.raises(ValueError):
+        factorial(-1)
+====================================================
+
+==================== EXAMPLE 2 ====================
+Code:
+def find_max(lst):
+    if not lst:
+        return None
+    max_val = lst[0]
+    for item in lst[1:]:
+        if item > max_val:
+            max_val = item
+    return max_val
+
+Tests:
+def test_find_max_normal():
+    assert find_max([1, 3, 2]) == 3
+
+def test_find_max_single():
+    assert find_max([5]) == 5
+
+def test_find_max_empty():
+    assert find_max([]) is None
+
+def test_find_max_negative():
+    assert find_max([-3, -1, -2]) == -1
+
+def test_find_max_duplicates():
+    assert find_max([2, 2, 2]) == 2
+====================================================
+
+Now write tests for the following code:
+
+==================== CODE UNDER TEST ====================
+{source_code}
+=========================================================
+
+Task:
+{prompt_text}
+
+Requirements:
+- Write unit tests using pytest.
+- Tests must be executable and syntactically correct.
+- Focus on functional correctness and edge cases.
+- Do not modify the original source code.
+- Do not include explanations, comments, or markdown.
+- Output only valid test code.
