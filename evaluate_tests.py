@@ -292,16 +292,34 @@ def parse_args():
         help="Path to original dataset (e.g., benchmarks/UnLeakedTestBench/datasets/ULT.jsonl)"
     )
     parser.add_argument(
+        "--framework",
+        type=str,
+        default="zero_shot",
+        help="Framework name (zero_shot, few_shot, gtot)"
+    )
+    parser.add_argument(
+        "--model",
+        type=str,
+        default="gpt-4o",
+        help="Model name"
+    )
+    parser.add_argument(
         "--results-file",
         type=str,
-        default="results/benchmark_results.jsonl",
-        help="Generation results file to read"
+        default=None,
+        help="Generation results file to read (default: results/{framework}/{model}/k{k}/benchmark_results.jsonl)"
     )
     parser.add_argument(
         "--output-file",
         type=str,
-        default="results/evaluation_results.jsonl",
-        help="Output file for evaluation results"
+        default=None,
+        help="Output file for evaluation results (default: results/{framework}/{model}/k{k}/evaluation_results.jsonl)"
+    )
+    parser.add_argument(
+        "--k",
+        type=int,
+        default=1,
+        help="Which k experiment to evaluate"
     )
     parser.add_argument(
         "--limit",
@@ -338,8 +356,11 @@ def main():
     dataset_dict = {item['task_id']: item for item in dataset}
     print(f"Loaded {len(dataset_dict)} tasks from dataset")
     
-    print(f"Loading generation results from: {args.results_file}")
-    results_file = Path(args.results_file)
+    results_path = args.results_file or f"results/{args.framework}/{args.model}/k{args.k}/benchmark_results.jsonl"
+    output_path = args.output_file or f"results/{args.framework}/{args.model}/k{args.k}/evaluation_results.jsonl"
+    
+    print(f"Loading generation results from: {results_path}")
+    results_file = Path(results_path)
     if not results_file.exists():
         print(f"Error: Results file not found: {results_file}")
         return
@@ -361,7 +382,7 @@ def main():
         successful_results = successful_results[:args.limit]
         print(f"Limiting to {args.limit} tasks")
     
-    output_file = Path(args.output_file)
+    output_file = Path(output_path)
     output_file.parent.mkdir(parents=True, exist_ok=True)
     
     print(f"Output file: {output_file}")
@@ -409,6 +430,8 @@ def main():
                 'func_name': gen_result.get('func_name', ''),
                 'model': gen_result.get('model', ''),
                 'framework': gen_result.get('framework', ''),
+                'k': gen_result.get('k', 1),
+                'sample': gen_result.get('sample', 1),
                 'output_file': str(test_file_path)
             })
             
@@ -475,6 +498,30 @@ def main():
         print(f"  - Total mutations: {total_mutations_total}")
         print(f"  - Killed: {total_mutations_killed}")
         print(f"  - Mutation Score (Mut@k): {overall_mutation_score:.2%}")
+    
+    # Pass@k summary: group by task, check if at least 1 sample passed all tests
+    from collections import defaultdict
+    task_samples = defaultdict(list)
+    output_records = []
+    if output_file.exists():
+        with open(output_file) as f:
+            for line in f:
+                if line.strip():
+                    output_records.append(json.loads(line))
+    for rec in output_records:
+        tid = rec.get('task_id', '')
+        task_samples[tid].append(rec)
+    
+    if task_samples:
+        pass_at_k_count = 0
+        for tid, samples in task_samples.items():
+            any_passed = any(
+                s.get('pass_rate', 0) == 1.0 for s in samples
+            )
+            if any_passed:
+                pass_at_k_count += 1
+        k_val = output_records[0].get('k', 1) if output_records else 1
+        print(f"\nPass@{k_val}: {pass_at_k_count}/{len(task_samples)} = {pass_at_k_count/len(task_samples):.2%}")
     
     print(f"\nResults saved to: {output_file}")
 

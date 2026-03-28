@@ -1,0 +1,30 @@
+You are generating final test code based on a comprehensive test strategy.
+
+==================== CODE UNDER TEST ====================
+{source_code}
+=========================================================
+
+Task: {prompt_text}
+
+STEP 3: TEST CODE SYNTHESIS
+
+Based on the following test strategies:
+
+{strategies}
+
+Now generate complete pytest test code that implements all strategies.
+
+Requirements:
+- Write unit tests using pytest
+- Each test function should implement one strategy
+- Tests must be executable and syntactically correct
+- Use descriptive test function names (e.g., test_node_A_validation, test_path_normal_flow)
+- Include appropriate assertions for each strategy
+- Cover all identified nodes, paths, combinations, and boundaries
+- Test error conditions with pytest.raises() where appropriate
+- CRITICAL: Do NOT copy or redefine the function being tested - assume it is already imported
+- CRITICAL: Only output test functions (def test_...), not the source code itself
+- Do not include explanations, comments, or markdown
+- Output only valid Python test code
+
+Generate comprehensive, well-structured test code now.

@@ -1,0 +1,52 @@
+You are analyzing {language} code to prepare for comprehensive test generation.
+
+==================== CODE UNDER TEST ====================
+{source_code}
+=========================================================
+
+Task: {prompt_text}
+
+STEP 1: CODE STRUCTURE ANALYSIS
+
+Your goal is to analyze this code as a graph of execution paths:
+
+1. **Identify Nodes**: List all distinct execution nodes:
+   - Input validation nodes (e.g., parameter checks, type checks)
+   - Conditional branches (if/elif/else)
+   - Loop constructs
+   - Exception handling blocks
+   - Computation nodes
+   - Return points
+
+2. **Identify Edges**: Map the relationships between nodes:
+   - Sequential dependencies (A must execute before B)
+   - Conditional paths (A leads to B if condition X)
+   - Alternative paths (A or B, but not both)
+
+3. **Identify Combinations**: List important combinations:
+   - Which conditions can be true simultaneously?
+   - Which paths are mutually exclusive?
+   - What are the boundary cases between paths?
+
+Output your analysis in this format:
+
+NODES:
+- Node A: [description]
+- Node B: [description]
+...
+
+EDGES:
+- A → B (condition: ...)
+- B → C (sequential)
+...
+
+COMBINATIONS:
+- Scenario 1: Nodes [A, C, E] (description)
+- Scenario 2: Nodes [A, D, F] (description)
+...
+
+BOUNDARY CASES:
+- Case 1: [description]
+...
+
+Be thorough and systematic. This analysis will guide test generation.

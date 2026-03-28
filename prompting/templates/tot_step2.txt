@@ -1,0 +1,32 @@
+You are synthesizing test code based on evaluated test strategies.
+
+==================== CODE UNDER TEST ====================
+{source_code}
+=========================================================
+
+Task: {prompt_text}
+
+STEP 2: EVALUATE STRATEGIES AND SYNTHESIZE TEST CODE
+
+Here are the candidate test strategies generated in Step 1:
+
+{strategies}
+
+Now:
+1. **Evaluate** each strategy: Which tests are most valuable? Which provide the best coverage?
+2. **Select** the best test cases from all strategies, avoiding redundancy.
+3. **Synthesize** complete pytest test code combining the best elements.
+
+Requirements:
+- Write unit tests using pytest
+- Select the most effective tests from all strategies
+- Prioritize: coverage of different code paths > redundant tests of similar paths
+- Use descriptive test function names (e.g., test_normal_input, test_edge_case_empty)
+- Include appropriate assertions
+- Test error conditions with pytest.raises() where appropriate
+- CRITICAL: Do NOT copy or redefine the function being tested - assume it is already imported
+- CRITICAL: Only output test functions (def test_...), not the source code itself
+- Do not include explanations, comments, or markdown
+- Output only valid Python test code
+
+Generate the final, comprehensive test code now.

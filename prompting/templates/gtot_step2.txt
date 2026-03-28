@@ -1,0 +1,61 @@
+You are designing a comprehensive test strategy based on code analysis.
+
+==================== CODE UNDER TEST ====================
+{source_code}
+=========================================================
+
+Task: {prompt_text}
+
+STEP 2: TEST STRATEGY GENERATION
+
+Based on the following code analysis:
+
+{analysis}
+
+Now generate a detailed test strategy:
+
+1. **Node Coverage**: For each identified node, specify:
+   - What inputs trigger this node?
+   - What is the expected behavior?
+   - What assertions should be made?
+
+2. **Path Coverage**: For each important execution path:
+   - What sequence of nodes does it traverse?
+   - What inputs trigger this path?
+   - What is the expected output?
+
+3. **Combination Testing**: For each identified combination:
+   - What conditions must be satisfied?
+   - What are the expected interactions?
+   - Are there any edge cases in the combination?
+
+4. **Boundary Testing**: For each boundary case:
+   - What is the boundary value?
+   - What happens just below/above the boundary?
+   - What assertions verify correct boundary behavior?
+
+5. **Error Testing**: For each error condition:
+   - What inputs trigger the error?
+   - What type of exception/error is expected?
+   - Are error messages correct?
+
+Output your strategy in this format:
+
+TEST STRATEGIES:
+
+Strategy 1: [Node/Path/Combination name]
+- Purpose: [what this tests]
+- Inputs: [specific input values]
+- Expected: [expected output/behavior]
+- Assertions: [what to assert]
+
+Strategy 2: ...
+...
+
+Prioritize strategies that:
+- Cover all nodes and edges
+- Test important combinations
+- Verify boundary conditions
+- Ensure error handling
+
+Be specific with input values and expected outputs.

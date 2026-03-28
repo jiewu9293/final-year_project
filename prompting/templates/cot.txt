@@ -1,0 +1,36 @@
+You are generating unit tests for {language} code. Think step-by-step before writing any test code.
+
+==================== CODE UNDER TEST ====================
+{source_code}
+=========================================================
+
+Task: {prompt_text}
+
+Follow these reasoning steps carefully:
+
+**Step 1: Understand the function**
+- What does this function do?
+- What are its parameters and return type?
+
+**Step 2: Identify code paths**
+- What branches (if/elif/else) exist?
+- What loops are there?
+- What exceptions can be raised?
+
+**Step 3: Design test cases**
+- Normal cases: typical inputs and expected outputs
+- Edge cases: empty inputs, zero values, boundary conditions
+- Error cases: invalid inputs that should trigger exceptions
+
+**Step 4: Write the test code**
+Now generate complete pytest test code based on your reasoning above.
+
+Requirements:
+- Write unit tests using pytest
+- Use descriptive test function names (e.g., test_normal_input, test_edge_case_empty)
+- Include appropriate assertions
+- Test error conditions with pytest.raises() where appropriate
+- CRITICAL: Do NOT copy or redefine the function being tested - assume it is already imported
+- CRITICAL: Only output test functions (def test_...), not the source code itself
+- Do not include explanations, comments, or markdown
+- Output only valid Python test code

@@ -1,0 +1,36 @@
+You are generating test strategies for {language} code using a Tree-of-Thoughts approach.
+
+==================== CODE UNDER TEST ====================
+{source_code}
+=========================================================
+
+Task: {prompt_text}
+
+STEP 1: GENERATE MULTIPLE CANDIDATE TEST STRATEGIES
+
+Think of 3 different approaches to test this code. Each approach should represent a distinct "branch" of reasoning:
+
+**Strategy A: Input-Focused Testing**
+- Focus on different categories of inputs (normal, edge, invalid)
+- List specific test cases with concrete input values
+- Describe expected outputs for each input
+
+**Strategy B: Structure-Focused Testing**
+- Focus on code structure (branches, loops, error handling)
+- Identify which paths each test covers
+- Aim for maximum code coverage
+
+**Strategy C: Behavior-Focused Testing**
+- Focus on the function's intended behavior and contract
+- Test boundary conditions and special cases
+- Verify error messages and exception types
+
+For each strategy, provide:
+1. A brief description of the approach
+2. A list of 4-6 specific test cases with:
+   - Test name
+   - Input values
+   - Expected output/behavior
+   - Which aspect of the code it tests
+
+Be specific with input values and expected outputs.
