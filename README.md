@@ -216,12 +216,17 @@ python -c "import openai; print('OpenAI client ready')"
 If you use this work, please cite:
 
 ```
-[Your thesis citation information]
+@mastersthesis{deng2026llm,
+  title={LLM-Based Unit Test Generation: A Comparative Study of Prompting Frameworks},
+  author={Deng, Jiewu},
+  year={2026},
+  school={King's College London}
+}
 ```
 
 ## License
 
-[Your license information]
+MIT License
 
 ## Acknowledgments
 
