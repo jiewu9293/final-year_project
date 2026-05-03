@@ -75,8 +75,6 @@ def run_single(framework: str, model: str, k: int, args) -> bool:
         cmd += ["--limit", str(args.limit)]
     if args.offset:
         cmd += ["--offset", str(args.offset)]
-    if args.results_dir:
-        cmd += ["--results-dir", args.results_dir]
 
     tqdm.write(f"\n{'─'*60}")
     tqdm.write(f"  Framework : {framework}")
