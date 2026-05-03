@@ -16,21 +16,18 @@ from prompting.few_shot import FewShotPrompting
 from prompting.cot import CoTPrompting
 from prompting.gtot import GToTPrompting
 from prompting.tot import ToTPrompting
-from clients.openai_client import OpenAIClient
-from clients.anthropic_client import AnthropicClient
-from clients.deepseek_client import DeepSeekClient
-from clients.google_client import GoogleClient
+from clients import OpenAIClient, AnthropicClient, DeepSeekClient, GoogleClient
 from utils.io import append_jsonl
 
 
-# ── Supported models (11 total) ────────────────────────────────────────
+# ── Supported models (7 total) ────────────────────────────────────────
 SUPPORTED_MODELS = [
     # OpenAI (High/Mid/Low)
-    "gpt-5.4", "gpt-5.4-mini", "gpt-5.4-nano",
+    "gpt-5.4-mini", "gpt-5.4-nano",
     # Anthropic (High/Mid/Low)
-    "claude-opus-4-6", "claude-sonnet-4-6", "claude-haiku-4-5",
+    "claude-sonnet-4-6", "claude-haiku-4-5",
     # Google (High/Mid/Low)
-    "gemini-3.1-pro-preview", "gemini-3-flash-preview", "gemini-3.1-flash-lite-preview",
+    "gemini-3-flash-preview",
     # DeepSeek (Reasoning/General)
     "deepseek-reasoner", "deepseek-chat",
 ]
@@ -162,10 +159,21 @@ def main():
     framework = FRAMEWORKS[args.framework]()
     print(f"Using framework: {args.framework}")
     
+    # Adjust max_tokens for models that need more output capacity
+    max_tokens = args.max_tokens
+    if "reasoner" in args.model.lower() or "o1" in args.model.lower():
+        # DeepSeek-Reasoner: 32K default (max 64K, includes CoT + answer)
+        max_tokens = 32768
+        print(f"⚡ Reasoning model detected: increasing max_tokens to {max_tokens}")
+    elif "gemini" in args.model.lower():
+        # Gemini models: 8192 default, max 65536 for Gemini 3.1 Pro
+        max_tokens = 8192
+        print(f"⚡ Gemini model detected: increasing max_tokens to {max_tokens}")
+    
     client = get_client(
         model=args.model,
         temperature=args.temperature,
-        max_tokens=args.max_tokens,
+        max_tokens=max_tokens,
     )
     print(f"Using model: {args.model}")
     
@@ -221,14 +229,6 @@ def main():
                     'latency': latency,
                     'input_tokens': client.last_input_tokens,
                     'output_tokens': client.last_output_tokens,
-                    'energy_kwh_min': client.last_energy_kwh[0] if client.last_energy_kwh else None,
-                    'energy_kwh_max': client.last_energy_kwh[1] if client.last_energy_kwh else None,
-                    'gwp_kgco2eq_min': client.last_gwp_kgco2eq[0] if client.last_gwp_kgco2eq else None,
-                    'gwp_kgco2eq_max': client.last_gwp_kgco2eq[1] if client.last_gwp_kgco2eq else None,
-                    'adpe_kgsbeq_min': client.last_adpe_kgsbeq[0] if client.last_adpe_kgsbeq else None,
-                    'adpe_kgsbeq_max': client.last_adpe_kgsbeq[1] if client.last_adpe_kgsbeq else None,
-                    'pe_mj_min': client.last_pe_mj[0] if client.last_pe_mj else None,
-                    'pe_mj_max': client.last_pe_mj[1] if client.last_pe_mj else None,
                     'output_file': str(output_file),
                     'status': 'success',
                     'error': None

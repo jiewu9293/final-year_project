@@ -2,9 +2,7 @@
 Google (Gemini) LLM client using new google-genai SDK.
 
 Supported models:
-- gemini-3.1-pro-preview           (high-end, most capable)
 - gemini-3-flash-preview           (mid-tier, balanced)
-- gemini-3.1-flash-lite-preview    (low-tier, fast and cheap)
 """
 
 import os
@@ -35,6 +33,10 @@ class GoogleClient(BaseLLMClient):
         model_name = kwargs.get("model", self.model)
         temperature = kwargs.get("temperature", self.temperature)
         max_tokens = kwargs.get("max_tokens", self.max_tokens)
+        
+        # Add 'models/' prefix if not already present
+        if not model_name.startswith("models/"):
+            model_name = f"models/{model_name}"
 
         # Convert OpenAI-style messages to Gemini format
         system_instruction = None
@@ -76,7 +78,7 @@ class GoogleClient(BaseLLMClient):
         if usage is not None:
             self.last_input_tokens = getattr(usage, "prompt_token_count", None)
             self.last_output_tokens = getattr(usage, "candidates_token_count", None)
-            total = (self.last_input_tokens or 0) + (self.last_output_tokens or 0)
-            self.last_total_tokens = total if total > 0 else None
+            self.last_total_tokens = getattr(usage, "total_token_count", None)
+
 
         return response.text

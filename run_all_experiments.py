@@ -12,7 +12,6 @@ Usage:
 """
 
 import argparse
-import os
 import subprocess
 import sys
 import time
@@ -23,28 +22,24 @@ from tqdm import tqdm
 # ── Default experiment configuration ───────────────────────────────────────
 
 DEFAULT_MODELS = [
-    # OpenAI
-    "gpt-5.4",
+    # OpenAI (removed expensive gpt-5.4, kept mid/low tier)
     "gpt-5.4-mini",
     "gpt-5.4-nano",
-    # Anthropic
-    "claude-opus-4-6",
+    # Anthropic (removed expensive claude-opus-4-6, kept mid/low tier)
     "claude-sonnet-4-6",
     "claude-haiku-4-5",
-    # DeepSeek
+    # DeepSeek (kept both - very cost-effective)
     "deepseek-reasoner",
     "deepseek-chat",
-    # Google (commented out - add back when API key is available)
-    # "gemini-3.1-pro-preview",
-    # "gemini-3-flash-preview",
-    # "gemini-3.1-flash-lite-preview",
+    # Google (FREE - preview models)
+    "gemini-3-flash-preview",    # Preview flash (free)
 ]
 
 DEFAULT_FRAMEWORKS = ["zero_shot", "few_shot", "cot", "tot", "gtot"]
 
 DEFAULT_K_VALUES = [1, 3, 5]
 
-DEFAULT_DATASET = "benchmarks/UnLeakedTestBench/datasets/ULT.jsonl"
+DEFAULT_DATASET = "benchmarks/UnLeakedTestBench/datasets/ULT_sample10.jsonl"
 
 
 # ── Helpers ─────────────────────────────────────────────────────────────────
@@ -189,8 +184,8 @@ def main():
     passed, failed, skipped = [], [], []
     overall_start = time.perf_counter()
 
-    # Progress bar (force=True ensures it shows even in non-TTY environments)
-    pbar = tqdm(combinations, desc="Overall Progress", unit="config", ncols=100, file=sys.stdout, dynamic_ncols=True)
+    # Progress bar
+    pbar = tqdm(combinations, desc="Overall Progress", unit="config", ncols=100)
     
     for i, (fw, model, k) in enumerate(pbar, 1):
         # Update progress bar description

@@ -4,7 +4,6 @@ import os
 import time
 from openai import OpenAI
 from openai import NotFoundError
-from ecologits import EcoLogits
 
 from clients.base import BaseLLMClient, LLMResponse
 
@@ -40,7 +39,6 @@ class OpenAIClient(BaseLLMClient):
                 "OPENAI_API_KEY not found in environment variables"
             )
 
-        EcoLogits.init(providers="openai")
         self.client = OpenAI(api_key=api_key)
 
     def generate(self, messages, **kwargs) -> str:
@@ -83,12 +81,6 @@ class OpenAIClient(BaseLLMClient):
             self.last_input_tokens = getattr(usage, "prompt_tokens", None)
             self.last_output_tokens = getattr(usage, "completion_tokens", None)
             self.last_total_tokens = getattr(usage, "total_tokens", None)
-
-        # Try to extract environmental impacts (may not be available for all models)
-        try:
-            self._extract_impacts(response)
-        except (AttributeError, TypeError):
-            pass  # Impacts not available for this model
 
         return response.choices[0].message.content
 

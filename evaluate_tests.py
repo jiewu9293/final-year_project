@@ -292,28 +292,16 @@ def parse_args():
         help="Path to original dataset (e.g., benchmarks/UnLeakedTestBench/datasets/ULT.jsonl)"
     )
     parser.add_argument(
-        "--framework",
-        type=str,
-        default="zero_shot",
-        help="Framework name (zero_shot, few_shot, gtot)"
-    )
-    parser.add_argument(
-        "--model",
-        type=str,
-        default="gpt-4o",
-        help="Model name"
-    )
-    parser.add_argument(
         "--results-file",
         type=str,
         default=None,
-        help="Generation results file to read (default: results/{framework}/{model}/k{k}/benchmark_results.jsonl)"
+        help="Generation results file to read (default: results/k{k}/benchmark_results.jsonl)"
     )
     parser.add_argument(
         "--output-file",
         type=str,
         default=None,
-        help="Output file for evaluation results (default: results/{framework}/{model}/k{k}/evaluation_results.jsonl)"
+        help="Output file for evaluation results (default: results/k{k}/evaluation_results.jsonl)"
     )
     parser.add_argument(
         "--k",
@@ -356,8 +344,8 @@ def main():
     dataset_dict = {item['task_id']: item for item in dataset}
     print(f"Loaded {len(dataset_dict)} tasks from dataset")
     
-    results_path = args.results_file or f"results/{args.framework}/{args.model}/k{args.k}/benchmark_results.jsonl"
-    output_path = args.output_file or f"results/{args.framework}/{args.model}/k{args.k}/evaluation_results.jsonl"
+    results_path = args.results_file or f"results/k{args.k}/benchmark_results.jsonl"
+    output_path = args.output_file or f"results/k{args.k}/evaluation_results.jsonl"
     
     print(f"Loading generation results from: {results_path}")
     results_file = Path(results_path)

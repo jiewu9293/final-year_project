@@ -81,11 +81,15 @@ def eval_exists(framework: str, model: str, k: int, results_dir: str) -> bool:
 
 def run_single_eval(framework: str, model: str, k: int, args) -> bool:
     """Run evaluation for one configuration. Returns True on success."""
+    # Construct paths for results and output files
+    results_file = f"{args.results_dir}/{framework}/{model}/k{k}/benchmark_results.jsonl"
+    output_file = f"{args.results_dir}/{framework}/{model}/k{k}/evaluation_results.jsonl"
+    
     cmd = [
         sys.executable, "evaluate_tests.py",
         "--dataset", args.dataset,
-        "--framework", framework,
-        "--model", model,
+        "--results-file", results_file,
+        "--output-file", output_file,
         "--k", str(k),
         "--timeout", str(args.timeout),
     ]

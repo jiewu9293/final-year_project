@@ -24,11 +24,7 @@ class AnthropicClient(BaseLLMClient):
     ):
         super().__init__(model=model, temperature=temperature, max_tokens=max_tokens)
 
-        api_key = os.getenv("ANTHROPIC_API_KEY")
-        if not api_key:
-            raise RuntimeError("ANTHROPIC_API_KEY not found in environment variables")
-
-        self.client = anthropic.Anthropic(api_key=api_key)
+        self.client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 
     def generate(self, messages, **kwargs) -> str:
         model = kwargs.get("model", self.model)

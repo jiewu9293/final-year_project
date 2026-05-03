@@ -242,56 +242,78 @@ def plot_pass_at_k_comparison(all_results, figures_dir):
 
 def plot_framework_comparison(all_results, figures_dir):
     """
-    Bar chart comparing frameworks at k=1.
+    Bar chart comparing frameworks across all k values (k=1,3,5) using subplots.
     """
-    # Filter k=1 results
-    k1_results = {(fw, model): data for (fw, model, k), data in all_results.items() if k == 1}
+    from collections import defaultdict
     
-    if not k1_results:
-        return
-
-    frameworks = []
-    metrics_data = {'Pass Rate': [], 'Line Cov': [], 'Branch Cov': [], 'Mut Score': []}
+    # Group by framework and k
+    framework_k_data = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
     
-    for (framework, model), data in sorted(k1_results.items()):
+    for (framework, model, k), data in all_results.items():
         valid = [d for d in data if d.get('pass_rate') is not None]
-        if not valid:
-            continue
-            
-        frameworks.append(framework.replace('_', '-'))
-        metrics_data['Pass Rate'].append(np.mean([d['pass_rate'] for d in valid]))
-        metrics_data['Line Cov'].append(np.mean(safe_list(valid, 'line_coverage')))
-        metrics_data['Branch Cov'].append(np.mean(safe_list(valid, 'branch_coverage')))
-        metrics_data['Mut Score'].append(np.mean(safe_list(valid, 'mutation_score')))
-
-    if not frameworks:
+        for d in valid:
+            framework_k_data[k][framework]['pass_rate'].append(d.get('pass_rate', 0) or 0)
+            framework_k_data[k][framework]['line_coverage'].append(d.get('line_coverage', 0) or 0)
+            framework_k_data[k][framework]['branch_coverage'].append(d.get('branch_coverage', 0) or 0)
+            framework_k_data[k][framework]['mutation_score'].append(d.get('mutation_score', 0) or 0)
+    
+    if not framework_k_data:
         return
 
-    x = np.arange(len(frameworks))
-    width = 0.2
-    colors = ['#4C72B0', '#55A868', '#C44E52', '#8172B2']
-
-    fig, ax = plt.subplots(figsize=(10, 6))
+    # Create subplots for k=1, 3, 5
+    k_values = sorted([k for k in framework_k_data.keys() if k in [1, 3, 5]])
+    if not k_values:
+        return
     
-    for i, (metric, values) in enumerate(metrics_data.items()):
-        offset = width * (i - 1.5)
-        bars = ax.bar(x + offset, values, width, label=metric, color=colors[i], alpha=0.8)
+    fig, axes = plt.subplots(1, len(k_values), figsize=(15, 5), sharey=True)
+    if len(k_values) == 1:
+        axes = [axes]
+    
+    colors = ['#4C72B0', '#55A868', '#C44E52', '#8172B2']
+    metric_names = ['Pass Rate', 'Line Cov', 'Branch Cov', 'Mut Score']
+    metric_keys = ['pass_rate', 'line_coverage', 'branch_coverage', 'mutation_score']
+    
+    for idx, k in enumerate(k_values):
+        ax = axes[idx]
+        frameworks = sorted(framework_k_data[k].keys())
+        frameworks_display = [fw.replace('_', '-') for fw in frameworks]
         
-        for bar, val in zip(bars, values):
-            ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.02,
-                   f'{val:.1%}', ha='center', fontsize=8)
-
-    ax.set_xlabel('Framework', fontsize=12)
-    ax.set_ylabel('Score', fontsize=12)
-    ax.set_title('Framework Comparison (k=1)', fontsize=13, fontweight='bold')
-    ax.set_xticks(x)
-    ax.set_xticklabels(frameworks)
-    ax.set_ylim(0, 1.2)
-    ax.legend(fontsize=10)
-    ax.grid(axis='y', alpha=0.3)
-
+        # Calculate metrics
+        metrics_data = {name: [] for name in metric_names}
+        for framework in frameworks:
+            for metric_name, metric_key in zip(metric_names, metric_keys):
+                metrics_data[metric_name].append(np.mean(framework_k_data[k][framework][metric_key]))
+        
+        x = np.arange(len(frameworks))
+        width = 0.2
+        
+        for i, (metric, values) in enumerate(metrics_data.items()):
+            offset = width * (i - 1.5)
+            bars = ax.bar(x + offset, values, width, label=metric if idx == 0 else "", 
+                         color=colors[i], alpha=0.8)
+            
+            for bar, val in zip(bars, values):
+                if val > 0.05:  # Only show label if value is significant
+                    ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.01,
+                           f'{val:.1%}', ha='center', fontsize=7, rotation=0)
+        
+        ax.set_xlabel('Framework', fontsize=11)
+        if idx == 0:
+            ax.set_ylabel('Score', fontsize=11)
+        ax.set_title(f'k={k}', fontsize=12, fontweight='bold')
+        ax.set_xticks(x)
+        ax.set_xticklabels(frameworks_display, fontsize=9)
+        ax.set_ylim(0, 1.0)
+        ax.grid(axis='y', alpha=0.3)
+    
+    # Add legend only once
+    axes[0].legend(fontsize=9, loc='upper left')
+    
+    fig.suptitle('Framework Comparison Across k Values (averaged across all models)', 
+                 fontsize=14, fontweight='bold', y=1.02)
+    
     plt.tight_layout()
-    plt.savefig(figures_dir / 'framework_comparison.png')
+    plt.savefig(figures_dir / 'framework_comparison.png', dpi=150, bbox_inches='tight')
     plt.close()
     print(f"  Saved: {figures_dir / 'framework_comparison.png'}")
 
@@ -543,6 +565,169 @@ def plot_provider_comparison(all_results, figures_dir):
     print(f"  Saved: {out}")
 
 
+def plot_energy_comparison(all_results, figures_dir):
+    """
+    Compare energy consumption across models and frameworks.
+    """
+    model_energy = defaultdict(lambda: defaultdict(list))
+    
+    for (framework, model, k), data in all_results.items():
+        for d in data:
+            energy = d.get('energy_kwh_min')
+            if energy:
+                model_energy[model]['energy'].append(energy * 1e6)  # Convert to mWh
+                model_energy[model]['quality'].append(d.get('mutation_score', 0) or 0)
+    
+    if not model_energy:
+        print("  Skipping energy_comparison: no energy data found")
+        return
+    
+    models = sorted(model_energy.keys())
+    energies = [np.mean(model_energy[m]['energy']) if model_energy[m]['energy'] else 0 for m in models]
+    qualities = [np.mean(model_energy[m]['quality']) if model_energy[m]['quality'] else 0 for m in models]
+    
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
+    
+    # Left: Energy consumption bar chart
+    colors = ['#4C72B0', '#E07B39', '#27AE60', '#8E44AD', '#C44E52', '#55A868', '#8172B2']
+    short_names = [m.replace('gpt-5.4', 'gpt5.4').replace('claude-', 'cl-').replace('gemini-', 'gem-').replace('deepseek-', 'ds-') for m in models]
+    
+    bars = ax1.bar(range(len(models)), energies, color=colors[:len(models)], alpha=0.8)
+    ax1.set_xlabel('Model', fontsize=12)
+    ax1.set_ylabel('Energy Consumption (mWh)', fontsize=12)
+    ax1.set_title('Average Energy Consumption per Task', fontsize=13, fontweight='bold')
+    ax1.set_xticks(range(len(models)))
+    ax1.set_xticklabels(short_names, rotation=25, ha='right', fontsize=9)
+    ax1.grid(axis='y', alpha=0.3)
+    
+    for bar, val in zip(bars, energies):
+        ax1.text(bar.get_x() + bar.get_width()/2, bar.get_height() + max(energies)*0.02,
+                f'{val:.1f}', ha='center', va='bottom', fontsize=8)
+    
+    # Right: Energy efficiency (quality per mWh)
+    efficiency = [q/e if e > 0 else 0 for q, e in zip(qualities, energies)]
+    bars2 = ax2.bar(range(len(models)), efficiency, color=colors[:len(models)], alpha=0.8)
+    ax2.set_xlabel('Model', fontsize=12)
+    ax2.set_ylabel('Energy Efficiency (Mutation Score / mWh)', fontsize=12)
+    ax2.set_title('Energy Efficiency Comparison', fontsize=13, fontweight='bold')
+    ax2.set_xticks(range(len(models)))
+    ax2.set_xticklabels(short_names, rotation=25, ha='right', fontsize=9)
+    ax2.grid(axis='y', alpha=0.3)
+    
+    for bar, val in zip(bars2, efficiency):
+        ax2.text(bar.get_x() + bar.get_width()/2, bar.get_height() + max(efficiency)*0.02,
+                f'{val:.3f}', ha='center', va='bottom', fontsize=8)
+    
+    plt.tight_layout()
+    out = figures_dir / 'energy_comparison.png'
+    plt.savefig(out)
+    plt.close()
+    print(f"  Saved: {out}")
+
+
+def plot_carbon_comparison(all_results, figures_dir):
+    """
+    Compare carbon emissions across models and frameworks.
+    """
+    model_carbon = defaultdict(list)
+    
+    for (framework, model, k), data in all_results.items():
+        for d in data:
+            carbon = d.get('gwp_kgco2eq_min')
+            if carbon:
+                model_carbon[model].append(carbon * 1e6)  # Convert to mg CO2eq
+    
+    if not model_carbon:
+        print("  Skipping carbon_comparison: no carbon data found")
+        return
+    
+    models = sorted(model_carbon.keys())
+    mean_carbon = [np.mean(model_carbon[m]) if model_carbon[m] else 0 for m in models]
+    total_carbon = [np.sum(model_carbon[m]) if model_carbon[m] else 0 for m in models]
+    
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
+    
+    colors = ['#4C72B0', '#E07B39', '#27AE60', '#8E44AD', '#C44E52', '#55A868', '#8172B2']
+    short_names = [m.replace('gpt-5.4', 'gpt5.4').replace('claude-', 'cl-').replace('gemini-', 'gem-').replace('deepseek-', 'ds-') for m in models]
+    
+    # Left: Average carbon per task
+    bars1 = ax1.bar(range(len(models)), mean_carbon, color=colors[:len(models)], alpha=0.8)
+    ax1.set_xlabel('Model', fontsize=12)
+    ax1.set_ylabel('Carbon Emissions (mg CO₂eq per task)', fontsize=12)
+    ax1.set_title('Average Carbon Emissions per Task', fontsize=13, fontweight='bold')
+    ax1.set_xticks(range(len(models)))
+    ax1.set_xticklabels(short_names, rotation=25, ha='right', fontsize=9)
+    ax1.grid(axis='y', alpha=0.3)
+    
+    for bar, val in zip(bars1, mean_carbon):
+        ax1.text(bar.get_x() + bar.get_width()/2, bar.get_height() + max(mean_carbon)*0.02,
+                f'{val:.1f}', ha='center', va='bottom', fontsize=8)
+    
+    # Right: Total carbon emissions
+    total_g = [t/1e3 for t in total_carbon]  # Convert to grams
+    bars2 = ax2.bar(range(len(models)), total_g, color=colors[:len(models)], alpha=0.8)
+    ax2.set_xlabel('Model', fontsize=12)
+    ax2.set_ylabel('Total Carbon Emissions (g CO₂eq)', fontsize=12)
+    ax2.set_title('Total Carbon Emissions (all experiments)', fontsize=13, fontweight='bold')
+    ax2.set_xticks(range(len(models)))
+    ax2.set_xticklabels(short_names, rotation=25, ha='right', fontsize=9)
+    ax2.grid(axis='y', alpha=0.3)
+    
+    for bar, val in zip(bars2, total_g):
+        ax2.text(bar.get_x() + bar.get_width()/2, bar.get_height() + max(total_g)*0.02,
+                f'{val:.1f}', ha='center', va='bottom', fontsize=8)
+    
+    plt.tight_layout()
+    out = figures_dir / 'carbon_comparison.png'
+    plt.savefig(out)
+    plt.close()
+    print(f"  Saved: {out}")
+
+
+def plot_framework_energy(all_results, figures_dir):
+    """
+    Compare energy consumption across frameworks.
+    """
+    framework_energy = defaultdict(list)
+    
+    for (framework, model, k), data in all_results.items():
+        for d in data:
+            energy = d.get('energy_kwh_min')
+            if energy:
+                framework_energy[framework].append(energy * 1e6)  # mWh
+    
+    if not framework_energy:
+        print("  Skipping framework_energy: no energy data found")
+        return
+    
+    frameworks = sorted(framework_energy.keys())
+    means = [np.mean(framework_energy[fw]) if framework_energy[fw] else 0 for fw in frameworks]
+    stds = [np.std(framework_energy[fw]) if framework_energy[fw] else 0 for fw in frameworks]
+    
+    fig, ax = plt.subplots(figsize=(10, 6))
+    colors = ['#4C72B0', '#55A868', '#C44E52', '#8172B2', '#E07B39']
+    
+    bars = ax.bar(range(len(frameworks)), means, yerr=stds, capsize=5,
+                  color=colors[:len(frameworks)], alpha=0.8)
+    
+    ax.set_xlabel('Framework', fontsize=12)
+    ax.set_ylabel('Energy Consumption (mWh per task)', fontsize=12)
+    ax.set_title('Energy Consumption by Prompting Framework', fontsize=13, fontweight='bold')
+    ax.set_xticks(range(len(frameworks)))
+    ax.set_xticklabels([f.replace('_', '-') for f in frameworks], fontsize=11)
+    ax.grid(axis='y', alpha=0.3)
+    
+    for bar, m, s in zip(bars, means, stds):
+        ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + s + max(means)*0.02,
+                f'{m:.1f}', ha='center', va='bottom', fontsize=10, fontweight='bold')
+    
+    plt.tight_layout()
+    out = figures_dir / 'framework_energy.png'
+    plt.savefig(out)
+    plt.close()
+    print(f"  Saved: {out}")
+
+
 def main():
     results_base = Path("results")
     
@@ -576,21 +761,7 @@ def main():
                 if not data:
                     continue
 
-                # Create directory structure: figures/{framework}/{model}/k{k}/
-                figures_dir = FIGURES_BASE / framework / model / k_name
-                figures_dir.mkdir(parents=True, exist_ok=True)
-
-                print(f"\n{'='*50}")
-                print(f"Processing: {framework}/{model}/{k_name}")
-                print(f"  Records: {len(data)}")
-                print(f"  Output: {figures_dir}")
-                print(f"{'='*50}")
-
-                # Generate per-configuration figures
-                plot_metrics_boxplot(data, figures_dir)
-                plot_summary_bar(data, figures_dir)
-                plot_energy_vs_quality(data, figures_dir)
-                plot_carbon_histogram(data, figures_dir)
+                print(f"Loading: {framework}/{model}/{k_name} ({len(data)} records)")
 
                 # Store for comparison plots
                 all_results[(framework, model, k_value)] = data
@@ -600,6 +771,7 @@ def main():
         print(f"\n{'='*50}")
         print("Generating comparison plots")
         print(f"{'='*50}")
+        # Core figures for paper
         plot_pass_at_k_comparison(all_results, FIGURES_BASE)
         plot_framework_comparison(all_results, FIGURES_BASE)
         plot_model_comparison(all_results, FIGURES_BASE)
@@ -607,13 +779,14 @@ def main():
         plot_cost_vs_quality(all_results, FIGURES_BASE)
         plot_provider_comparison(all_results, FIGURES_BASE)
 
-    print(f"\n✅ All figures saved to {FIGURES_BASE}/")
-    print(f"\nDirectory structure:")
-    print(f"  figures/")
-    print(f"    ├── pass_at_k_comparison.png")
-    print(f"    ├── framework_comparison.png")
-    for (fw, model, k), _ in sorted(all_results.items()):
-        print(f"    └── {fw}/{model}/k{k}/")
+    print(f"\n✅ All core figures saved to {FIGURES_BASE}/")
+    print(f"\nGenerated figures:")
+    print(f"  1. pass_at_k_comparison.png       - Pass@k across frameworks")
+    print(f"  2. framework_comparison.png       - Framework comparison (k=1)")
+    print(f"  3. model_comparison.png           - Model performance comparison")
+    print(f"  4. model_framework_heatmap.png    - Model × Framework heatmap")
+    print(f"  5. cost_vs_quality.png            - Cost-quality tradeoff")
+    print(f"  6. provider_comparison.png        - Cross-provider comparison")
 
 
 if __name__ == "__main__":
