@@ -227,8 +227,8 @@ def main():
                     'temperature': args.temperature,
                     'max_tokens': args.max_tokens,
                     'latency': latency,
-                    'input_tokens': client.last_input_tokens,
-                    'output_tokens': client.last_output_tokens,
+                    'input_tokens': getattr(client, 'last_input_tokens', 0),
+                    'output_tokens': getattr(client, 'last_output_tokens', 0),
                     'output_file': str(output_file),
                     'status': 'success',
                     'error': None
