@@ -248,6 +248,15 @@ $RECYCLE.BIN/
 *.lnk
 
 # End of https://www.toptal.com/developers/gitignore/api/macos,windows,linux,python
+
+# Experiment outputs and results
 outputs/
 results/
+aggregate_summary.json
+
+# Generated figures (can be regenerated from results)
+figures/result_figures/
+
+# Benchmark data (too large, clone separately)
+benchmarks/UnLeakedTestBench/
 benchmarks/

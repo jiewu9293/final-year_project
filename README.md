@@ -6,7 +6,7 @@ This repository contains the implementation and experimental pipeline for evalua
 
 This project systematically compares prompting strategies for LLM-based test generation using:
 - **5 Prompting Frameworks**: Zero-shot, Few-shot, CoT, ToT, GToT
-- **7 LLM Models**: GPT-4o-mini, GPT-4o-nano, Claude-Sonnet-4, Claude-Haiku-4, DeepSeek-Reasoner, DeepSeek-Chat, Gemini-2.0-Flash
+- **7 LLM Models**: GPT-5.4-mini, GPT-5.4-nano, Claude-Sonnet-4-6, Claude-Haiku-4-5, DeepSeek-Reasoner, DeepSeek-Chat, Gemini-3-Flash-preview
 - **Evaluation Metrics**: Mutation score, pass rate, line coverage, branch coverage
 - **Benchmark**: UnLeakedTestBench (10-task stratified sample)
 
@@ -71,14 +71,14 @@ Generate tests for a specific model-framework-k combination:
 
 ```bash
 python run_benchmark.py \
-  --model gpt-4o-mini \
+  --model gpt-5.4-mini \
   --framework cot \
   --k 3 \
   --dataset benchmarks/UnLeakedTestBench/ULT_sample10.jsonl
 ```
 
 **Parameters**:
-- `--model`: Model name (e.g., `gpt-4o-mini`, `claude-sonnet-4`, `deepseek-reasoner`)
+- `--model`: Model name (e.g., `gpt-5.4-mini`, `claude-sonnet-4-6`, `deepseek-reasoner`)
 - `--framework`: Prompting framework (`zero_shot`, `few_shot`, `cot`, `tot`, `gtot`)
 - `--k`: Number of test samples to generate per task (default: 3)
 - `--dataset`: Path to the benchmark dataset
@@ -158,15 +158,15 @@ Outputs:
 
 ## Supported Models
 
-| Provider   | Model Name              | API Parameter          |
-|------------|-------------------------|------------------------|
-| OpenAI     | GPT-4o-mini             | `gpt-4o-mini`          |
-| OpenAI     | GPT-4o-nano             | `gpt-4o-nano`          |
-| Anthropic  | Claude-Sonnet-4         | `claude-sonnet-4`      |
-| Anthropic  | Claude-Haiku-4          | `claude-haiku-4`       |
-| DeepSeek   | DeepSeek-Reasoner       | `deepseek-reasoner`    |
-| DeepSeek   | DeepSeek-Chat           | `deepseek-chat`        |
-| Google     | Gemini-2.0-Flash        | `gemini-2.0-flash`     |
+| Provider   | Model Name              | API Parameter              |
+|------------|-------------------------|----------------------------|
+| OpenAI     | GPT-5.4-mini            | `gpt-5.4-mini`             |
+| OpenAI     | GPT-5.4-nano            | `gpt-5.4-nano`             |
+| Anthropic  | Claude-Sonnet-4-6       | `claude-sonnet-4-6`        |
+| Anthropic  | Claude-Haiku-4-5        | `claude-haiku-4-5`         |
+| DeepSeek   | DeepSeek-Reasoner       | `deepseek-reasoner`        |
+| DeepSeek   | DeepSeek-Chat           | `deepseek-chat`            |
+| Google     | Gemini-3-Flash-preview  | `gemini-3-flash-preview`   |
 
 ## Prompting Frameworks
 
@@ -183,8 +183,8 @@ See `prompting/templates/` for complete prompt templates.
 Key findings from the experimental evaluation:
 
 - **Best Framework**: Tree-of-Thought (ToT) achieved the highest mutation score (67.8%)
-- **Best Model**: Claude-Sonnet-4 + ToT (78.3% mutation score)
-- **Cost-Effective**: GPT-4o-mini + Few-shot (balanced quality and cost)
+- **Best Model**: Claude-Sonnet-4-6 + ToT (78.3% mutation score)
+- **Cost-Effective**: GPT-5.4-mini + Few-shot (balanced quality and cost)
 - **Provider Ranking**: Anthropic > OpenAI > DeepSeek > Google (by mutation score)
 
 For detailed results, see the thesis document or `aggregate_summary.json`.
